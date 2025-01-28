@@ -6,13 +6,17 @@ import NewsList from "../../commponents/NewsList/NewsList.jsx";
 import Skeleton from "../../commponents/Skeleton/Skeleton.jsx";
 import Pagination from "../../commponents/Pagination/Pagination.jsx";
 import Categories from "../../commponents/Categories/Categories.jsx";
+import Search from "../../commponents/Search/Search.jsx";
+import {useDebounce} from "../../commponents/helpers/hooks/useDebounce.js";
 
 const Main = () => {
     const [news, setNews] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("All");
+    const [keywords, setKeywords] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const debouncedKeywords =useDebounce(keywords, 1500);
     const totalPages = 10;
     const pageSize = 10;
 
@@ -24,6 +28,7 @@ const Main = () => {
                     page_number: currentPage,
                     page_size: pageSize,
                     category: selectedCategory === "All" ? null : selectedCategory,
+                    keywords: keywords,
                 }
             )
             setNews(resp.news)
@@ -46,9 +51,9 @@ const Main = () => {
     }, []);
 
     useEffect(() => {
-        fetchNews(currentPage);
+        fetchNews(currentPage, debouncedKeywords);
 
-    }, [currentPage, selectedCategory])
+    }, [currentPage, selectedCategory,debouncedKeywords])
 
     const handleNextPage = () => {
         if (currentPage < totalPages) {
@@ -68,8 +73,9 @@ const Main = () => {
         <main className={styles.main}>
             <Categories category={categories} setSelectedCategory={setSelectedCategory}
                         selectedCategory={selectedCategory}/>
-            {news.length > 0 && !isLoading ? <NewsBanner item={news[0]}/> : (<Skeleton type={'banner'} count={1}/>)}
+            <Search keywords={keywords} setKeywords={setKeywords}/>
 
+            {news.length > 0 && !isLoading ? <NewsBanner item={news[0]}/> : (<Skeleton type={'banner'} count={1}/>)}
             <Pagination handleNextPage={handleNextPage}
                         handlePreviousPage={handlePreviousPage}
                         handlePageClick={handlePageClick}
